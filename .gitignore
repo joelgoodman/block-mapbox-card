@@ -1,0 +1,48 @@
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.npm
+.env
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
+
+# Build files
+/build/
+/dist/
+*.min.js
+*.min.css
+*.map
+
+# Composer
+/vendor/
+composer.phar
+
+# IDE and Editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Testing
+/coverage/
+/phpunit.xml
+.phpunit.result.cache
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Project specific
+style-index.css.map
+index.css.map
+index.js.map
+view.js.map

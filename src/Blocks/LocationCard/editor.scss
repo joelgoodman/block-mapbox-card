@@ -1,0 +1,288 @@
+.wp-block-onepd-mapbox-location-card {
+    // Default styles that can be overridden by block controls
+    background-color: var(--wp--preset--color--white, #fff);
+    color: var(--wp--preset--color--black, #333);
+    border-radius: var(--wp--custom--border--radius, 4px);
+    border: var(--wp--custom--border--width, 1px) var(--wp--custom--border--style, solid) var(--wp--custom--border--color, #e0e0e0);
+    margin: var(--wp--custom--spacing--margin, 0);
+    gap: var(--wp--custom--spacing--block-gap, 16px);
+    max-width: var(--wp--style--global--content-size, 840px);
+    &.is-style-outline {
+        background-color: transparent;
+        border-width: 2px;
+    }
+
+    &__inner {
+        display: flex;
+        gap: inherit;
+        background-clip: border-box;
+    }
+
+    &__map-container {
+        aspect-ratio: 1;
+        height: 100%;
+        flex: 0 0 40%;
+        background: var(--wp--preset--color--gray-100, #f5f5f5);
+        border-radius: inherit;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    &__content {
+        flex: 0 0 60%;
+        color: inherit;
+    }
+
+    &__error {
+        color: var(--wp--preset--color--error, #d32f2f);
+        text-align: center;
+        padding: var(--wp--preset--padding--small, 24px);
+        font-size: var(--wp--preset--font-size--small, 14px);
+    }
+
+    &__address {
+        font-size: var(--wp--preset--font-size--small, 16px);
+        color: var(--wp--preset--color--gray-600, #666);
+        margin-top: 0.5em;
+    }
+
+    &__placeholder {
+        color: var(--wp--preset--color--gray-600, #666);
+        text-align: center;
+        padding: 20px;
+        font-size: var(--wp--preset--font-size--small, 14px);
+    }
+
+    // Search component styles
+    &__search {
+        margin-bottom: 1rem;
+    }
+
+    &__search-results {
+        margin-top: 0.5rem;
+        border: 1px solid var(--wp--preset--color--gray-200, #eee);
+        border-radius: var(--wp--custom--border--radius, 4px);
+        max-height: 200px;
+        overflow-y: auto;
+    }
+
+    &__search-result {
+        padding: 0.5rem;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+
+        &:hover {
+            background-color: var(--wp--preset--color--gray-100, #f5f5f5);
+        }
+    }
+
+    &.is-layout-flex {
+        display: flex;
+
+        &.is-horizontal {
+            flex-direction: row;
+            align-items: center;
+
+            .wp-block-onepd-mapbox-location-card__map {
+                aspect-ratio: 1;
+                height: 100%;
+                flex: 0 0 40%;
+            }
+
+            .wp-block-onepd-mapbox-location-card__body {
+                flex: 1;
+            }
+        }
+
+        &.is-vertical {
+            flex-direction: column;
+            align-items: stretch;
+
+            .wp-block-onepd-mapbox-location-card__map {
+                aspect-ratio: 3/1;
+                width: 100%;
+                height: 100%;
+            }
+
+            .wp-block-onepd-mapbox-location-card__body {
+                width: 100%;
+            }
+        }
+    }
+
+    &__map {
+        position: relative;
+        background-color: #f0f0f0;
+    }
+
+    &__body {
+        position: relative;
+    }
+
+    &__address {
+        margin-top: 0.5rem;
+        font-size: 0.9em;
+        color: #666;
+    }
+
+    &__address {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        
+        &__directions-link {
+            margin-left: 8px;
+            font-size: 0.8em;
+            text-decoration: none;
+            color: var(--wp--preset--color--primary);
+            transition: color 0.2s ease;
+
+            &:hover {
+                color: var(--wp--preset--color--secondary);
+                text-decoration: underline;
+            }
+        }
+    }
+
+    &__search-modal {
+        width: 400px;
+
+        .components-modal__content {
+            margin-top: 0;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .components-text-control__input {
+            margin-bottom: 16px;
+        }
+    }
+
+    &__search-results {
+        min-height: 300px;
+        position: relative;
+
+        .components-spinner {
+            margin: 8px auto;
+            display: block;
+        }
+    }
+
+    &__suggestions {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+
+        .components-button {
+            justify-content: flex-start;
+            height: auto;
+            white-space: normal;
+            text-align: left;
+            padding: 8px;
+            width: 100%;
+            word-break: break-word;
+        }
+    }
+
+    &__no-results {
+        color: #757575;
+        text-align: center;
+        margin: 16px 0;
+        font-style: italic;
+    }
+
+    &__suggestions {
+        &--vertical {
+            display: flex;
+            flex-direction: column;
+            max-height: 300px;
+            overflow-y: auto;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .components-button {
+            width: 100%;
+            text-align: left;
+            white-space: normal;
+            height: auto;
+            padding: 8px;
+        }
+    }
+}
+
+.wp-block-onepd-location-card {
+    .location-card {
+        display: flex;
+        gap: var(--wp--style--block-gap, 2em);
+
+        &__map {
+            flex: 0 0 40%;
+            height: 300px;
+            border-radius: 4px;
+            overflow: hidden;
+            background: #f0f0f0;
+        }
+
+        &__content {
+            flex: 0 0 60%;
+            position: relative;
+        }
+
+        &__address {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            min-height: 60px;
+        }
+    }
+
+    .components-placeholder {
+        min-height: 200px;
+        padding: 24px;
+
+        &__fieldset {
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .components-search-control {
+            width: 100%;
+            margin-bottom: 0;
+        }
+    }
+}
+
+.location-search {
+    margin-bottom: 1em;
+
+    &__input {
+        .mapboxgl-ctrl-geocoder {
+            width: 100%;
+            max-width: none;
+            box-shadow: none;
+            border: 1px solid #949494;
+            border-radius: 2px;
+
+            &--suggestion-item {
+                padding: 6px 12px;
+            }
+
+            input[type="text"] {
+                height: 30px;
+                padding: 6px 8px;
+                border: none;
+
+                &:focus {
+                    outline: 2px solid var(--wp-admin-theme-color);
+                    outline-offset: -1px;
+                }
+            }
+        }
+    }
+}
+
+// Import the main styles
+@import './style.scss';
