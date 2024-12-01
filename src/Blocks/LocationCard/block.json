@@ -69,29 +69,27 @@
     },
     "supports": {
         "html": false,
-        "border": true,
-        "shadow": true,
-        "borderWidth": true,
-        "borderRadius": true,
         "color": {
             "background": true,
-            "text": true
+            "text": true,
+            "link": true
+        },
+        "border": {
+            "color": true,
+            "radius": true,
+            "style": true,
+            "width": true
         },
         "spacing": {
             "margin": true,
             "padding": true
         },
-        "align": [
-            "left",
-            "center",
-            "right",
-            "wide",
-            "full"
-        ],
+        "shadow": true,
+        "align": true,
         "alignText": true,
         "anchor": true
     },
     "editorScript": "file:../../../build/Blocks/LocationCard/index.js",
     "editorStyle": ["file:../../../build/Blocks/LocationCard/index.css", "mapbox-gl", "mapbox-gl-geocoder"],
-    "style": ["file:../../../build/Blocks/LocationCard/style-style-index.css", "mapbox-gl", "mapbox-gl-geocoder"]
+    "style": ["file:../../../build/Blocks/LocationCard/style-index.css", "mapbox-gl", "mapbox-gl-geocoder"]
 }
