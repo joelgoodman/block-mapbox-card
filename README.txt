@@ -1,9 +1,9 @@
-=== Mapbox Map Card ===
-Contributors: asilentthing
-Tags: maps, mapbox, locations, blocks, geocoding
-Requires at least: 5.8
-Tested up to: 6.7
-Stable tag: 1.0.0
+=== One Perfect Dish - Mapbox Integration ===
+Contributors: oneperfectdish
+Tags: mapbox, maps, location
+Requires at least: 6.0
+Tested up to: 6.4
+Stable tag: 1.0.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -49,7 +49,7 @@ Mapbox Map Card brings the power of Mapbox to your WordPress site, allowing you 
 
 = Requirements =
 
-* WordPress 5.8 or higher
+* WordPress 6.0 or higher
 * PHP 7.4 or higher
 * Mapbox API access token
 
@@ -86,6 +86,10 @@ Yes, you can customize various aspects of the map through the block settings in 
 
 == Changelog ==
 
+= 1.0.1 =
+* Fixed block template locking to allow editing of inner blocks while maintaining group structure
+* Restored block bindings for dynamic address and directions updates
+
 = 1.0.0 =
 * Initial release
 * Added Location Card block
@@ -94,6 +98,9 @@ Yes, you can customize various aspects of the map through the block settings in 
 * Included REST API endpoints
 
 == Upgrade Notice ==
+
+= 1.0.1 =
+Fixed block template locking and restored block bindings.
 
 = 1.0.0 =
 Initial release of Mapbox Map Card plugin.

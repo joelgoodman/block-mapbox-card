@@ -1,11 +1,11 @@
 <?php
 /**
- * Plugin Name: OnePD Mapbox
- * Plugin URI: https://onepd.com
- * Description: Mapbox integration for OnePD
- * Version: 1.0.0
- * Author: OnePD
- * Author URI: https://onepd.com
+ * Plugin Name: One Perfect Dish - Mapbox Integration
+ * Plugin URI: https://github.com/1perfectdish/1pd-mapbox
+ * Description: Mapbox integration for One Perfect Dish
+ * Version: 1.0.1
+ * Author: One Perfect Dish
+ * Author URI: https://oneperfectdish.com
  * License: GPL2
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: onepd-mapbox
@@ -20,7 +20,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('ONEPD_MAPBOX_VERSION', '1.0.0');
+define('ONEPD_MAPBOX_VERSION', '1.0.1');
 define('ONEPD_MAPBOX_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('ONEPD_MAPBOX_PLUGIN_URL', plugin_dir_url(__FILE__));
 
