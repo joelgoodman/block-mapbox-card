@@ -173,31 +173,22 @@ class Block {
 			'role' => 'region'
 		) );
 
-		return sprintf(
-			'<div %1$s>
-                <div class="wp-block-onepd-location-card__content" aria-live="polite">
-                    <div 
-                        class="wp-block-onepd-location-card__map" 
-                        aria-label="%4$s" 
-                        role="img" 
-                        aria-describedby="location-description">
-                    </div>
-                    <div class="wp-block-onepd-location-card__body">
-                        %2$s
-                        <p 
-                            id="location-description" 
-                            class="wp-block-onepd-location-card__address" 
-                            aria-live="polite">
-                            %3$s
-                        </p>
-                    </div>
-                </div>
-            </div>',
-			$wrapper_attributes,
-			$content,
-			$address,
-			__('Interactive map showing location', 'onepd-mapbox')
+		// Modify the map div to add a11y attributes
+		$map_div_attributes = ' aria-label="' . esc_attr__('Interactive map showing location', 'onepd-mapbox') . '" role="img" aria-describedby="location-description"';
+		$content = str_replace(
+			'<div class="wp-block-onepd-mapbox-location-card__map">',
+			'<div class="wp-block-onepd-mapbox-location-card__map"' . $map_div_attributes . '>',
+			$content
 		);
+
+		// Modify the address paragraph to add a11y attributes
+		$content = str_replace(
+			'<p class="wp-block-onepd-location-card__address">',
+			'<p class="wp-block-onepd-location-card__address" id="location-description" aria-live="polite">',
+			$content
+		);
+
+		return $content;
 	}
 
 	private function get_mapbox_api_key(): string {
