@@ -445,7 +445,8 @@ export default function Edit({ attributes, setAttributes, isSelected, clientId, 
 
     const BLOCKS_TEMPLATE = [
         ['core/group', {
-            className: 'wp-block-onepd-mapbox-location-card__body'
+            className: 'wp-block-onepd-mapbox-location-card__body',
+            templateLock: false // Allow editing of inner blocks
         }, [
             ['core/heading', {
                 level: 2,
@@ -476,7 +477,7 @@ export default function Edit({ attributes, setAttributes, isSelected, clientId, 
 
     const innerBlocksProps = useInnerBlocksProps(
         { className: 'wp-block-onepd-mapbox-location-card__content' },
-        { template: BLOCKS_TEMPLATE, templateLock: 'all' }
+        { template: BLOCKS_TEMPLATE, templateLock: 'insert' }
     );
 
     const [searchQuery, setSearchQuery] = useState('');
