@@ -6,30 +6,18 @@
     border-radius: var(--wp--custom--border--radius, 4px);
     border: var(--wp--custom--border--width, 1px) var(--wp--custom--border--style, solid) var(--wp--custom--border--color, #e0e0e0);
     margin: var(--wp--custom--spacing--margin, 0);
-    max-width: var(--wp--style--global--content-size, 840px);
+    align-items: stretch;
 
-    &.is-vertical {
-        flex-direction: column;
-
-        .wp-block-onepd-mapbox-location-card__map,
-        .wp-block-onepd-mapbox-location-card__body {
-            width: 100%;
-        }
+    &__content {
+        display: flex;
+        align-items: center;
+        justify-content: stretch;
     }
-
-    &:not(.is-vertical) {
-        .wp-block-onepd-mapbox-location-card__map {
-            flex: 0 0 40%;
-        }
-        .wp-block-onepd-mapbox-location-card__body {
-            flex: 1 auto;
-        }
-    }
-
     &__map {
-        height: 300px;
         position: relative;
         overflow: hidden;
+        height: 100%;
+        aspect-ratio: 3/1;
         background: var(--wp--preset--color--gray-100, #f5f5f5);
     }
 
@@ -41,19 +29,25 @@
     &__address {
         margin-top: auto;
         color: #666;
-        font-size: 0.9em;
+        font-size: var(--wp--preset--font-size--small, 14px);
     }
-
-    @media (max-width: 600px) {
+        &.is-style-stacked {
         flex-direction: column;
 
         .wp-block-onepd-mapbox-location-card__map,
         .wp-block-onepd-mapbox-location-card__body {
             width: 100%;
         }
+    }
 
+    &:not(.is-style-stacked) {
         .wp-block-onepd-mapbox-location-card__map {
-            height: 200px;
+            flex: 0 0 40%;
+            min-width: 300px;
+            aspect-ratio: 1;
+        }
+        .wp-block-onepd-mapbox-location-card__body {
+            flex: 1 auto;
         }
     }
 }
