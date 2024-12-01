@@ -411,19 +411,72 @@ export default function Edit({ attributes, setAttributes, isSelected, clientId, 
         setIsSearching(false);
     }, [setAttributes, generateAddressAbbreviation]);
 
+    useEffect(() => {
+        if (!clientId) return;
+
+        const innerBlocks = select('core/block-editor').getBlocks(clientId);
+        const groupBlock = innerBlocks.find(block => block.name === 'core/group');
+
+        if (groupBlock) {
+            // Update address text
+            const addressBlock = groupBlock.innerBlocks.find(block =>
+                block.attributes.className?.includes('wp-block-onepd-mapbox-location-card__address')
+            );
+
+            if (addressBlock) {
+                dispatch('core/block-editor').updateBlockAttributes(addressBlock.clientId, {
+                    content: addressAbbreviation
+                });
+            }
+
+            // Update Get Directions button URL
+            const buttonBlock = groupBlock.innerBlocks.find(block =>
+                block.name === 'core/button'
+            );
+
+            if (buttonBlock) {
+                const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`;
+                dispatch('core/block-editor').updateBlockAttributes(buttonBlock.clientId, {
+                    url: directionsUrl
+                });
+            }
+        }
+    }, [address, addressAbbreviation, clientId]);
+
+    const BLOCKS_TEMPLATE = [
+        ['core/group', {
+            className: 'wp-block-onepd-mapbox-location-card__body'
+        }, [
+            ['core/heading', {
+                level: 2,
+                className: 'wp-block-onepd-mapbox-location-card__title',
+                placeholder: __('Location Title', 'onepd-mapbox')
+            }],
+            ['core/paragraph', {
+                className: 'wp-block-onepd-mapbox-location-card__description',
+                placeholder: __('Location Description', 'onepd-mapbox')
+            }],
+            ['core/paragraph', {
+                className: 'wp-block-onepd-mapbox-location-card__address',
+                content: addressAbbreviation
+            }],
+            ['core/button', {
+                className: 'wp-block-onepd-mapbox-location-card__directions',
+                text: __('Get Directions', 'onepd-mapbox'),
+                url: `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`,
+                target: '_blank',
+                rel: 'noopener noreferrer'
+            }]
+        ]]
+    ];
+
     const blockProps = useBlockProps({
-        className: 'wp-block-onepd-mapbox-location-card',
+        className: `${className} ${isSelected ? 'is-selected' : ''}`
     });
 
     const innerBlocksProps = useInnerBlocksProps(
         { className: 'wp-block-onepd-mapbox-location-card__content' },
-        {
-            allowedBlocks: ['core/paragraph', 'core/heading', 'core/list', 'core/button'],
-            template: [
-                ['core/heading', { level: 3, placeholder: 'Location Title' }],
-                ['core/paragraph', { placeholder: 'Add location details' }]
-            ]
-        }
+        { template: BLOCKS_TEMPLATE, templateLock: 'all' }
     );
 
     const [searchQuery, setSearchQuery] = useState('');
