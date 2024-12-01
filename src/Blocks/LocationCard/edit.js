@@ -364,7 +364,7 @@ export default function Edit({ attributes, setAttributes, isSelected, clientId, 
     // Handle address selection
     const handleAddressSelect = useCallback((place) => {
         if (!place?.center) return;
-        
+
         setAttributes({
             latitude: place.center[1],
             longitude: place.center[0],
@@ -541,12 +541,10 @@ export default function Edit({ attributes, setAttributes, isSelected, clientId, 
 
             {address && (
                 <>
-                    <div className="wp-block-onepd-mapbox-location-card__map-container">
-                        <div 
-                            ref={mapContainerRef} 
-                            className="wp-block-onepd-mapbox-location-card__map" 
-                        />
-                    </div>
+                    <div
+                        ref={mapContainerRef}
+                        className="wp-block-onepd-mapbox-location-card__map"
+                    />
                     <div {...innerBlocksProps} />
                 </>
             )}

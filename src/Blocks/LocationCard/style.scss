@@ -8,11 +8,6 @@
     margin: var(--wp--custom--spacing--margin, 0);
     max-width: var(--wp--style--global--content-size, 840px);
 
-    &.is-style-outline {
-        background-color: transparent;
-        border-width: 2px;
-    }
-
     &.is-vertical {
         flex-direction: column;
 
@@ -27,7 +22,7 @@
             flex: 0 0 40%;
         }
         .wp-block-onepd-mapbox-location-card__body {
-            flex: 0 0 60%;
+            flex: 1 auto;
         }
     }
 

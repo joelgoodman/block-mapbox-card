@@ -1,0 +1,21 @@
+# AI INTERACTION GUIDELINES
+
+## CORE PRINCIPLES
+- DO NOT modify code outside the specific task being addressed
+- ALWAYS ask for explicit confirmation before making changes
+- NEVER alter files or code not directly related to the current task
+- IF UNSURE, ASK FOR CLARIFICATION
+
+## Workflow
+1. Clearly define the exact scope of work
+2. Show proposed changes BEFORE implementation
+3. Wait for explicit USER approval
+4. Make MINIMAL, TARGETED changes only
+
+## Strict Boundaries
+- NO UNSOLICITED MODIFICATIONS
+- NO REFACTORING WITHOUT DIRECT REQUEST
+- NO CHANGES TO:
+  * Existing functionality
+  * Unrelated files
+  * Project structure
