@@ -1,80 +1,101 @@
 (function() {
-    // AGGRESSIVE DEBUGGING
-    // Direct console output to ensure visibility
-    window.alert = function(message) {
-        // console.error('ALERT:', message);
-    };
+    // Mapbox Lazy Loading and Performance Optimization
+    const MapboxManager = {
+        // Track loaded maps to prevent duplicate initializations
+        loadedMaps: new Set(),
+        
+        // Mapbox GL JS dynamic import
+        async loadMapboxGL() {
+            if (window.mapboxgl) return window.mapboxgl;
+            
+            try {
+                // Dynamically import Mapbox GL JS
+                const mapboxgl = await import('https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js');
+                
+                // Load CSS dynamically
+                const link = document.createElement('link');
+                link.href = 'https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css';
+                link.rel = 'stylesheet';
+                document.head.appendChild(link);
+                
+                return mapboxgl;
+            } catch (error) {
+                console.error('Failed to load Mapbox GL JS:', error);
+                return null;
+            }
+        },
 
-    function initializeMapboxMaps() {
-        // Debugging: Print all window keys
-
-        // Aggressive API key retrieval
-        function getMapboxApiKey() {
+        // Retrieve API key with existing fallback logic
+        getMapboxApiKey() {
             const sources = [
-                () => {
-                    // debugLog('Checking onePDMapboxLocationData');
-                    return window.onePDMapboxLocationData?.apiKey;
-                },
-                () => {
-                    // debugLog('Checking onePDMapbox');
-                    return window.onePDMapbox?.apiKey;
-                },
-                () => {
-                    // debugLog('Checking wpApiSettings');
-                    return window.wpApiSettings?.mapboxApiKey;
-                },
-                () => {
-                    // debugLog('Checking onepd_mapbox_settings');
-                    return window.onepd_mapbox_settings?.api_key;
-                }
+                () => window.onePDMapboxLocationData?.apiKey,
+                () => window.onePDMapbox?.apiKey,
+                () => window.wpApiSettings?.mapboxApiKey,
+                () => window.onepd_mapbox_settings?.api_key
             ];
 
             for (const source of sources) {
                 const apiKey = source();
-                if (apiKey) {
-                    // debugLog(' API Key found:', apiKey);
-                    return apiKey;
-                }
+                if (apiKey) return apiKey;
             }
 
-            // console.error(' NO MAPBOX API KEY FOUND');
             return null;
-        }
+        },
 
-        // Check Mapbox GL JS availability
-        if (typeof mapboxgl === 'undefined') {
-            // console.error(' MAPBOX GL JS NOT LOADED');
-            return;
-        }
+        // Intersection Observer for Lazy Loading
+        observeMaps() {
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(async entry => {
+                    if (entry.isIntersecting) {
+                        const mapContainer = entry.target;
+                        
+                        // Prevent duplicate map initialization
+                        if (this.loadedMaps.has(mapContainer.id)) return;
 
-        // Retrieve API key
-        const apiKey = getMapboxApiKey();
-        if (!apiKey) {
-            // console.error(' CANNOT INITIALIZE MAPS: NO API KEY');
-            return;
-        }
+                        // Initialize map
+                        await this.initializeMap(mapContainer);
+                        
+                        // Stop observing this container
+                        observer.unobserve(mapContainer);
+                    }
+                });
+            }, {
+                rootMargin: '100px', // Start loading slightly before entering viewport
+                threshold: 0.01
+            });
 
-        // Configure Mapbox
-        mapboxgl.accessToken = apiKey;
+            // Observe all map containers
+            document.querySelectorAll('.wp-block-onepd-mapbox-location-card__map').forEach(mapContainer => {
+                // Ensure unique ID
+                if (!mapContainer.id) {
+                    mapContainer.id = `mapbox-container-${Math.random().toString(36).substr(2, 9)}`;
+                }
+                observer.observe(mapContainer);
+            });
+        },
 
-        // Find all location card blocks
-        const locationCards = document.querySelectorAll('.wp-block-onepd-mapbox-location-card');
-        
-        // debugLog(` Location Cards Found: ${locationCards.length}`);
+        // Map Initialization with existing logic
+        async initializeMap(mapContainer) {
+            // Prevent duplicate initializations
+            if (this.loadedMaps.has(mapContainer.id)) return;
 
-        locationCards.forEach((card, index) => {
-            // Get map container
-            const mapContainer = card.querySelector('.wp-block-onepd-mapbox-location-card__map');
-            
-            if (!mapContainer) {
-                // console.warn(` Location Card ${index}: Map container not found`);
+            // Load Mapbox GL JS
+            const mapboxgl = await this.loadMapboxGL();
+            if (!mapboxgl) {
+                mapContainer.textContent = 'Map could not be loaded';
                 return;
             }
 
-            // Ensure container has a unique ID
-            if (!mapContainer.id) {
-                mapContainer.id = `mapbox-container-${index}`;
+            // Retrieve API key
+            const apiKey = this.getMapboxApiKey();
+            if (!apiKey) {
+                mapContainer.textContent = 'Map could not be initialized: No API key';
+                return;
             }
+
+            // Get parent card for data attributes
+            const card = mapContainer.closest('.wp-block-onepd-mapbox-location-card');
+            if (!card) return;
 
             // Extract location data
             const latitude = parseFloat(card.dataset.latitude);
@@ -82,27 +103,17 @@
             const mapStyle = card.dataset.mapStyle || 'streets-v12';
             const zoomLevel = parseInt(card.dataset.zoomLevel) || 12;
 
-            // debugLog(` Location Card ${index} Data:`, { 
-            //     latitude, 
-            //     longitude, 
-            //     mapStyle, 
-            //     zoomLevel 
-            // });
-
             // Validate coordinates
             if (isNaN(latitude) || isNaN(longitude)) {
-                // console.error(` Location Card ${index}: Invalid coordinates`, {
-                //     latitude, 
-                //     longitude,
-                //     rawLatitude: card.dataset.latitude,
-                //     rawLongitude: card.dataset.longitude
-                // });
+                mapContainer.textContent = 'Invalid map coordinates';
                 return;
             }
 
             try {
-                // Create map with extensive logging
-                // debugLog(` Initializing map for container: ${mapContainer.id}`);
+                // Configure Mapbox
+                mapboxgl.accessToken = apiKey;
+
+                // Create map
                 const map = new mapboxgl.Map({
                     container: mapContainer.id,
                     style: `mapbox://styles/mapbox/${mapStyle}`,
@@ -113,36 +124,32 @@
                 });
 
                 // Add marker
-                // debugLog(' Adding marker');
                 new mapboxgl.Marker()
                     .setLngLat([longitude, latitude])
                     .addTo(map);
 
                 // Add navigation control
-                // debugLog(' Adding navigation control');
                 map.addControl(new mapboxgl.NavigationControl());
 
-                // Add load event listener
-                map.on('load', () => {
-                    // debugLog(` Map Loaded Successfully for ${mapContainer.id}`);
-                });
-
-                // Add error event listener
-                map.on('error', (error) => {
-                    // console.error(` Map Error for ${mapContainer.id}:`, error);
-                });
-
+                // Mark as loaded
+                this.loadedMaps.add(mapContainer.id);
             } catch (error) {
-                // console.error(` Location Card ${index}: Map initialization error`, error);
+                console.error('Map initialization error:', error);
                 mapContainer.textContent = 'Map could not be loaded';
             }
-        });
-    }
+        },
 
-    // Ensure script runs after DOM is ready
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initializeMapboxMaps);
-    } else {
-        initializeMapboxMaps();
-    }
+        // Initialize all map-related functionality
+        init() {
+            // Ensure script runs after DOM is ready
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', () => this.observeMaps());
+            } else {
+                this.observeMaps();
+            }
+        }
+    };
+
+    // Start map initialization
+    MapboxManager.init();
 })();
