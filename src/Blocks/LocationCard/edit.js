@@ -63,7 +63,7 @@ export default function Edit({ attributes, setAttributes, isSelected, clientId, 
                     setMap(null);
                 }
             } catch (error) {
-                console.error('Error cleaning up map:', error);
+                // Removed console.error statement
             }
         };
 
@@ -143,7 +143,7 @@ export default function Edit({ attributes, setAttributes, isSelected, clientId, 
                     newMap.remove();
                 }
             } catch (error) {
-                console.error('Error in cleanup:', error);
+                // Removed console.error statement
             }
         };
     }, [mapStyle, latitude, longitude, zoomLevel, className]);
@@ -206,7 +206,7 @@ export default function Edit({ attributes, setAttributes, isSelected, clientId, 
             }
         } catch (err) {
             setError(__('Error searching locations. Please try again.', 'onepd-mapbox'));
-            console.error('Mapbox search error:', err);
+            // Removed console.error statement
         } finally {
             setIsLoading(false);
         }

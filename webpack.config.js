@@ -11,5 +11,11 @@ module.exports = {
     output: {
         path: path.resolve(__dirname, 'build'),
         filename: '[name].js',
+    },
+    performance: {
+        hints: false  // Suppress performance hints
+    },
+    stats: {
+        warnings: false  // Suppress webpack warnings
     }
 };

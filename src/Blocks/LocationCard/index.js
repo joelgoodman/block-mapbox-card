@@ -17,9 +17,6 @@ window.onePDMapbox = window.onePDMapbox || {};
 
 // Function to retrieve API key from multiple sources
 function getMapboxApiKey() {
-    console.log('Attempting to retrieve Mapbox API Key');
-    console.log('Window object keys:', Object.keys(window));
-
     // Prioritized sources for API key
     const sources = [
         // First, check if already set in global object
@@ -47,12 +44,10 @@ function getMapboxApiKey() {
         if (apiKey) {
             // Ensure the key is set in the global object
             window.onePDMapbox.apiKey = apiKey;
-            console.log('API Key found and set:', apiKey);
             return apiKey;
         }
     }
 
-    console.error('No Mapbox API Key found');
     return null;
 }
 
@@ -65,13 +60,8 @@ window.onePDMapboxDebug = {
         return getMapboxApiKey();
     },
     setApiKey: (key) => {
-        console.log('Setting Mapbox API Key:', key);
         window.onePDMapbox = window.onePDMapbox || {};
         window.onePDMapbox.apiKey = key;
-    },
-    // Add a method to print all window keys for debugging
-    printWindowKeys: () => {
-        console.log('All window keys:', Object.keys(window));
     },
     // Method to force API key retrieval
     forceApiKeyRetrieval: () => {
@@ -81,7 +71,7 @@ window.onePDMapboxDebug = {
 
 // If no API key is found, log a warning
 if (!apiKey) {
-    console.warn('No Mapbox API Key could be retrieved. Location search will not work.');
+    // No Mapbox API Key could be retrieved. Location search will not work.
 }
 
 // Register block

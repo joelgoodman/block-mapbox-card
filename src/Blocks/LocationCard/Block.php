@@ -60,27 +60,14 @@ class Block {
 	private function register_assets(): void {
 		$script_asset_path = ONEPD_MAPBOX_PLUGIN_DIR . 'build/Blocks/LocationCard/index.asset.php';
 
-		// Debug logging
-		error_log( 'LocationCard Block: Attempting to register assets' );
-		error_log( 'Script asset path: ' . $script_asset_path );
-
 		if ( ! file_exists( $script_asset_path ) ) {
-			error_log( 'Script asset file not found: ' . $script_asset_path );
 			return;
 		}
 
 		try {
 			$script_asset = require $script_asset_path;
 
-			// Debug logging
-			error_log( 'Script asset loaded successfully' );
-			error_log( 'Script dependencies: ' . print_r( $script_asset['dependencies'], true ) );
-			error_log( 'Script version: ' . $script_asset['version'] );
-
 			$script_url = plugins_url( 'build/Blocks/LocationCard/index.js', dirname( dirname( __DIR__ ) ) );
-
-			// Debug logging
-			error_log( 'Script URL: ' . $script_url );
 
 			wp_register_script(
 				$this->script_handle,
@@ -90,9 +77,6 @@ class Block {
 				true // Load in footer
 			);
 
-			// Debug logging
-			error_log( 'Script registered with handle: ' . $this->script_handle );
-
 			wp_register_style(
 				$this->style_handle,
 				plugins_url( 'build/Blocks/LocationCard/style-style-index.css', dirname( dirname( __DIR__ ) ) ),
@@ -100,27 +84,17 @@ class Block {
 				filemtime( ONEPD_MAPBOX_PLUGIN_DIR . 'build/Blocks/LocationCard/style-style-index.css' )
 			);
 
-			// Debug logging
-			error_log( 'Style registered with handle: ' . $this->style_handle );
-
 		} catch ( Exception $e ) {
-			error_log( 'Error registering LocationCard block assets: ' . $e->getMessage() );
+			return;
 		}
 	}
 
 	public function enqueue_admin_scripts(): void {
-		// Ensure this method runs on both admin and frontend
 		$api_key = get_option( 'onepd_mapbox_api_key', '' );
 
-		// Debug logging
-		error_log( 'LocationCard Block: Enqueue Admin Scripts' );
-		error_log( 'API Key Status: ' . ( empty( $api_key ) ? 'Empty' : 'Present' ) );
-
-		// Always enqueue, even if API key is empty
 		wp_enqueue_script( $this->script_handle );
 
 		if ( ! empty( $api_key ) ) {
-			// Use wp_add_inline_script to add the API key
 			$inline_script = sprintf(
 				'window.onePDMapbox = window.onePDMapbox || {}; window.onePDMapbox.apiKey = "%s";',
 				esc_js( $api_key )
@@ -131,18 +105,13 @@ class Block {
 				$inline_script,
 				'before'
 			);
-
-			// Additional debug logging
-			error_log( 'LocationCard Block: Inline script added with API key' );
 		}
 	}
 
 	public function render_callback( $attributes, $content ): string {
-		// Conditionally enqueue Mapbox GL JS only when the block is rendered
 		wp_enqueue_style( 'mapbox-gl' );
 		wp_enqueue_script( 'mapbox-gl' );
 
-		// Enqueue frontend script for map initialization
 		wp_enqueue_script(
 			'onepd-mapbox-location-card-frontend',
 			plugins_url( 'build/Blocks/LocationCard/frontend.js', dirname( dirname( __DIR__ ) ) ),
@@ -151,14 +120,12 @@ class Block {
 			true
 		);
 
-		// Get values with defaults
 		$latitude = !empty( $attributes['latitude'] ) ? floatval( $attributes['latitude'] ) : 0;
 		$longitude = !empty( $attributes['longitude'] ) ? floatval( $attributes['longitude'] ) : 0;
 		$address = !empty( $attributes['address'] ) ? esc_attr( $attributes['address'] ) : '';
 		$map_style = !empty( $attributes['mapStyle'] ) ? esc_attr( $attributes['mapStyle'] ) : 'streets-v11';
 		$zoom_level = !empty( $attributes['zoomLevel'] ) ? intval( $attributes['zoomLevel'] ) : 14;
 
-		// Pass location data to frontend script (maintaining existing API key handling)
 		wp_localize_script(
 			'onepd-mapbox-location-card-frontend',
 			'onePDMapboxLocationData',
@@ -170,7 +137,6 @@ class Block {
 			)
 		);
 
-		// Build the block's HTML with data attributes and accessibility enhancements
 		$wrapper_attributes = get_block_wrapper_attributes( array(
 			'data-latitude' => $latitude,
 			'data-longitude' => $longitude,
@@ -181,7 +147,6 @@ class Block {
 			'role' => 'region'
 		) );
 
-		// Modify the map div to add a11y attributes
 		$map_div_attributes = ' aria-label="' . esc_attr__('Interactive map showing location', 'onepd-mapbox') . '" role="img" aria-describedby="location-description"';
 		$content = str_replace(
 			'<div class="wp-block-onepd-mapbox-location-card__map">',
@@ -189,7 +154,6 @@ class Block {
 			$content
 		);
 
-		// Modify the address paragraph to add a11y attributes
 		$content = str_replace(
 			'<p class="wp-block-onepd-location-card__address">',
 			'<p class="wp-block-onepd-location-card__address" id="location-description" aria-live="polite">',
@@ -200,10 +164,8 @@ class Block {
 	}
 
 	private function get_mapbox_api_key(): string {
-		// Maintain existing API key retrieval logic
 		$api_key = '';
 
-		// Check various sources in order of preference
 		if ( defined( 'ONEPD_MAPBOX_API_KEY' ) ) {
 			$api_key = ONEPD_MAPBOX_API_KEY;
 		} elseif ( function_exists( 'get_option' ) ) {
