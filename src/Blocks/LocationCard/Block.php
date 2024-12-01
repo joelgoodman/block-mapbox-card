@@ -162,28 +162,41 @@ class Block {
 			)
 		);
 
-		// Build the block's HTML with data attributes
+		// Build the block's HTML with data attributes and accessibility enhancements
 		$wrapper_attributes = get_block_wrapper_attributes( array(
 			'data-latitude' => $latitude,
 			'data-longitude' => $longitude,
 			'data-address' => $address,
 			'data-map-style' => $map_style,
-			'data-zoom-level' => $zoom_level
+			'data-zoom-level' => $zoom_level,
+			'aria-label' => __('Location Map and Details', 'onepd-mapbox'),
+			'role' => 'region'
 		) );
 
 		return sprintf(
 			'<div %1$s>
-                <div class="wp-block-onepd-location-card__content">
-                    <div class="wp-block-onepd-location-card__map"></div>
+                <div class="wp-block-onepd-location-card__content" aria-live="polite">
+                    <div 
+                        class="wp-block-onepd-location-card__map" 
+                        aria-label="%4$s" 
+                        role="img" 
+                        aria-describedby="location-description">
+                    </div>
                     <div class="wp-block-onepd-location-card__body">
                         %2$s
-                        <p class="wp-block-onepd-location-card__address">%3$s</p>
+                        <p 
+                            id="location-description" 
+                            class="wp-block-onepd-location-card__address" 
+                            aria-live="polite">
+                            %3$s
+                        </p>
                     </div>
                 </div>
             </div>',
 			$wrapper_attributes,
 			$content,
-			$address
+			$address,
+			__('Interactive map showing location', 'onepd-mapbox')
 		);
 	}
 

@@ -125,6 +125,9 @@ export default function Edit({ attributes, setAttributes, isSelected, clientId, 
 
         if (mapContainerRef.current) {
             resizeObserver.observe(mapContainerRef.current);
+            // A11y: Add aria-label and role to map container
+            mapContainerRef.current.setAttribute('aria-label', __('Interactive Location Map', 'onepd-mapbox'));
+            mapContainerRef.current.setAttribute('role', 'region');
         }
 
         setMap(newMap);
@@ -144,6 +147,26 @@ export default function Edit({ attributes, setAttributes, isSelected, clientId, 
             }
         };
     }, [mapStyle, latitude, longitude, zoomLevel, className]);
+
+    // State for error handling
+    const [error, setError] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [suggestions, setSuggestions] = useState([]);
+
+    // A11y: Error handling with screen reader-friendly messages
+    useEffect(() => {
+        if (error) {
+            const errorContainer = document.createElement('div');
+            errorContainer.setAttribute('aria-live', 'polite');
+            errorContainer.setAttribute('role', 'alert');
+            errorContainer.textContent = error;
+            document.body.appendChild(errorContainer);
+            
+            return () => {
+                document.body.removeChild(errorContainer);
+            };
+        }
+    }, [error]);
 
     // Perform Mapbox search
     const performSearch = useCallback(async (query) => {
@@ -179,6 +202,7 @@ export default function Edit({ attributes, setAttributes, isSelected, clientId, 
                 setSuggestions(sortedFeatures);
             } else {
                 setSuggestions([]);
+                setError(__('No locations found. Please try a different search.', 'onepd-mapbox'));
             }
         } catch (err) {
             setError(__('Error searching locations. Please try again.', 'onepd-mapbox'));
@@ -187,6 +211,13 @@ export default function Edit({ attributes, setAttributes, isSelected, clientId, 
             setIsLoading(false);
         }
     }, []);
+
+    // A11y: Keyboard navigation for location search
+    const handleKeyboardSearch = (event) => {
+        if (event.key === 'Enter') {
+            performSearch(event.target.value);
+        }
+    };
 
     const handleSelectLocation = useCallback((suggestion) => {
         setAttributes({
@@ -411,9 +442,6 @@ export default function Edit({ attributes, setAttributes, isSelected, clientId, 
     );
 
     const [searchQuery, setSearchQuery] = useState('');
-    const [suggestions, setSuggestions] = useState([]);
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState(null);
 
     return (
         <div {...useBlockProps({
@@ -485,6 +513,7 @@ export default function Edit({ attributes, setAttributes, isSelected, clientId, 
                                 setSearchQuery(value);
                                 performSearch(value);
                             }}
+                            onKeyDown={handleKeyboardSearch}
                             placeholder={__('Street address, city, or landmark', 'onepd-mapbox')}
                         />
 
