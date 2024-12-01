@@ -32,11 +32,7 @@
         },
         "zoomLevel": {
             "type": "number",
-            "default": 15
-        },
-        "orientation": {
-            "type": "string",
-            "default": "vertical"
+            "default": 12
         }
     },
     "supports": {

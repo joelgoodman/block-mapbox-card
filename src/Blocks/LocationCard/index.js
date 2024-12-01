@@ -1,7 +1,7 @@
 /**
  * WordPress dependencies
  */
-import { registerBlockType } from '@wordpress/blocks';
+import { registerBlockType, registerBlockStyle, unregisterBlockStyle } from '@wordpress/blocks';
 import { useBlockProps, useInnerBlocksProps, InnerBlocks } from '@wordpress/block-editor';
 import { __ } from '@wordpress/i18n';
 
@@ -85,23 +85,7 @@ if (!apiKey) {
 }
 
 // Register block
-const { name } = metadata;
-
-// Register block styles
-if (wp.blocks) {
-    wp.blocks.unregisterBlockStyle(name, 'default');
-    wp.blocks.registerBlockStyle(name, {
-        name: 'stacked',
-        label: __('Stacked', 'onepd-mapbox'),
-        isDefault: true
-    });
-    wp.blocks.registerBlockStyle(name, {
-        name: 'row',
-        label: __('Row', 'onepd-mapbox')
-    });
-}
-
-registerBlockType(name, {
+registerBlockType(metadata.name, {
     edit: Edit,
     save: ({ attributes }) => {
         const { address, latitude, longitude, mapStyle, zoomLevel } = attributes;
@@ -133,4 +117,16 @@ registerBlockType(name, {
             default: apiKey || ''
         }
     }
+});
+
+// Register block styles
+unregisterBlockStyle(metadata.name, 'default');
+registerBlockStyle(metadata.name, {
+    name: 'stacked',
+    label: __('Stacked', 'onepd-mapbox'),
+    isDefault: true
+});
+registerBlockStyle(metadata.name, {
+    name: 'row',
+    label: __('Row', 'onepd-mapbox')
 });

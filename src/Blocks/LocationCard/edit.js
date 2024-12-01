@@ -35,35 +35,115 @@ const MAP_STYLES = [
     { label: __('Satellite Streets', 'onepd-mapbox'), value: 'satellite-streets-v12' },
 ];
 
-export default function Edit({ attributes, setAttributes, isSelected, clientId }) {
-    // Destructure attributes with default values
+export default function Edit({ attributes, setAttributes, isSelected, clientId, className }) {
     const {
         address = '',
-        latitude = 0,
-        longitude = 0,
+        addressAbbreviation = '',
+        latitude,
+        longitude,
         mapStyle = 'streets-v12',
-        zoomLevel = 14,
-        addressAbbreviation = ''
+        zoomLevel = 12
     } = attributes;
 
-    // Prepare block props with data attributes
-    const blockProps = useBlockProps({
-        className: 'wp-block-onepd-mapbox-location-card',
-        'data-latitude': Number(latitude),
-        'data-longitude': Number(longitude),
-        'data-address': address,
-        'data-map-style': mapStyle,
-        'data-zoom-level': Number(zoomLevel)
-    });
-
-    const [isSearching, setIsSearching] = useState(false);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [suggestions, setSuggestions] = useState([]);
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState(null);
     const [map, setMap] = useState(null);
     const [mapMarker, setMapMarker] = useState(null);
+    const [isSearching, setIsSearching] = useState(false);
     const mapContainerRef = useRef(null);
+
+    // Handle style changes by reinitializing map
+    useEffect(() => {
+        const cleanupMap = () => {
+            try {
+                if (mapMarker) {
+                    mapMarker.remove();
+                    setMapMarker(null);
+                }
+                if (map && map.remove) {
+                    map.remove();
+                    setMap(null);
+                }
+            } catch (error) {
+                console.error('Error cleaning up map:', error);
+            }
+        };
+
+        if (!mapContainerRef.current || !window.onePDMapbox?.apiKey) {
+            return;
+        }
+
+        cleanupMap();
+
+        mapboxgl.accessToken = window.onePDMapbox.apiKey;
+
+        // Use saved coordinates if they exist
+        const hasCoordinates = latitude && longitude;
+        const center = hasCoordinates ? [longitude, latitude] : [-122.4194, 37.7749];
+        const currentZoom = zoomLevel ? parseFloat(zoomLevel) : 12;
+
+        const newMap = new mapboxgl.Map({
+            container: mapContainerRef.current,
+            style: `mapbox://styles/mapbox/${mapStyle}`,
+            center: center,
+            zoom: currentZoom,
+            interactive: true,
+            preserveDrawingBuffer: true
+        });
+
+        let currentMarker = null;
+
+        // Wait for map to load before adding controls and marker
+        newMap.on('load', () => {
+            if (!mapContainerRef.current) return;
+
+            // Add navigation control
+            newMap.addControl(new mapboxgl.NavigationControl());
+
+            // Add marker only if we have saved coordinates
+            if (hasCoordinates) {
+                currentMarker = new mapboxgl.Marker()
+                    .setLngLat([longitude, latitude])
+                    .addTo(newMap);
+                setMapMarker(currentMarker);
+            }
+
+            // Listen for zoom changes
+            newMap.on('zoomend', () => {
+                if (!mapContainerRef.current) return;
+                setAttributes({ zoomLevel: newMap.getZoom() });
+            });
+
+            // Force a resize to ensure the map fits its container
+            newMap.resize();
+        });
+
+        // Handle container size changes
+        const resizeObserver = new ResizeObserver(() => {
+            if (newMap && !newMap._removed) {
+                newMap.resize();
+            }
+        });
+
+        if (mapContainerRef.current) {
+            resizeObserver.observe(mapContainerRef.current);
+        }
+
+        setMap(newMap);
+
+        // Cleanup function
+        return () => {
+            try {
+                resizeObserver.disconnect();
+                if (currentMarker) {
+                    currentMarker.remove();
+                }
+                if (newMap && newMap.remove && !newMap._removed) {
+                    newMap.remove();
+                }
+            } catch (error) {
+                console.error('Error in cleanup:', error);
+            }
+        };
+    }, [mapStyle, latitude, longitude, zoomLevel, className]);
 
     // Perform Mapbox search
     const performSearch = useCallback(async (query) => {
@@ -294,96 +374,6 @@ export default function Edit({ attributes, setAttributes, isSelected, clientId }
         setIsSearching(false);
     }, [setAttributes, generateAddressAbbreviation]);
 
-    // Initialize map when component mounts or coordinates change
-    useEffect(() => {
-        // Ensure container and API key exist
-        if (!mapContainerRef.current || !window.onePDMapbox?.apiKey) {
-            return;
-        }
-
-        // Cleanup any existing map instance
-        if (map) {
-            if (mapMarker) {
-                mapMarker.remove();
-                setMapMarker(null);
-            }
-            map.remove();
-            setMap(null);
-        }
-
-        // Wait for container to be ready
-        setTimeout(() => {
-            if (!mapContainerRef.current) return;
-
-            mapboxgl.accessToken = window.onePDMapbox.apiKey;
-
-            // Use saved coordinates if they exist
-            const hasCoordinates = latitude && longitude;
-            const center = hasCoordinates ? [longitude, latitude] : [-122.4194, 37.7749];
-
-            try {
-                const newMap = new mapboxgl.Map({
-                    container: mapContainerRef.current,
-                    style: `mapbox://styles/mapbox/${mapStyle}`,
-                    center: center,
-                    zoom: Number(zoomLevel) || 12,
-                    interactive: true
-                });
-
-                // Wait for map to load before adding controls and marker
-                newMap.on('load', () => {
-                    // Add navigation control
-                    newMap.addControl(new mapboxgl.NavigationControl());
-
-                    // Add marker only if we have saved coordinates
-                    if (hasCoordinates) {
-                        const marker = new mapboxgl.Marker()
-                            .setLngLat([longitude, latitude])
-                            .addTo(newMap);
-                        setMapMarker(marker);
-                    }
-                });
-
-                setMap(newMap);
-            } catch (error) {
-                console.error('Error initializing map:', error);
-            }
-        }, 0);
-
-        // Cleanup function
-        return () => {
-            if (mapMarker) {
-                mapMarker.remove();
-                setMapMarker(null);
-            }
-            if (map) {
-                map.remove();
-                setMap(null);
-            }
-        };
-    }, [mapContainerRef, mapStyle, latitude, longitude, zoomLevel]);
-
-    // Update map when coordinates change
-    useEffect(() => {
-        if (!map || !latitude || !longitude) return;
-
-        try {
-            const coords = [longitude, latitude];
-            map.setCenter(coords);
-
-            if (mapMarker) {
-                mapMarker.setLngLat(coords);
-            } else {
-                const marker = new mapboxgl.Marker()
-                    .setLngLat(coords)
-                    .addTo(map);
-                setMapMarker(marker);
-            }
-        } catch (error) {
-            console.error('Error updating map:', error);
-        }
-    }, [map, latitude, longitude]);
-
     const BLOCKS_TEMPLATE = [
         ['core/group', {
             className: 'wp-block-onepd-mapbox-location-card__body'
@@ -420,8 +410,20 @@ export default function Edit({ attributes, setAttributes, isSelected, clientId }
         }
     );
 
+    const [searchQuery, setSearchQuery] = useState('');
+    const [suggestions, setSuggestions] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState(null);
+
     return (
-        <div {...blockProps}>
+        <div {...useBlockProps({
+            className: 'wp-block-onepd-mapbox-location-card',
+            'data-latitude': Number(latitude),
+            'data-longitude': Number(longitude),
+            'data-address': address,
+            'data-map-style': mapStyle,
+            'data-zoom-level': Number(zoomLevel)
+        })}>
             <InspectorControls>
                 <PanelBody
                     title={__("Map Settings", "onepd-mapbox")}
@@ -539,10 +541,12 @@ export default function Edit({ attributes, setAttributes, isSelected, clientId }
 
             {address && (
                 <>
-                    <div
-                        ref={mapContainerRef}
-                        className="wp-block-onepd-mapbox-location-card__map"
-                    />
+                    <div className="wp-block-onepd-mapbox-location-card__map-container">
+                        <div 
+                            ref={mapContainerRef} 
+                            className="wp-block-onepd-mapbox-location-card__map" 
+                        />
+                    </div>
                     <div {...innerBlocksProps} />
                 </>
             )}
