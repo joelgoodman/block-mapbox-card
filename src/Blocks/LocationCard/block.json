@@ -71,6 +71,7 @@
         "html": false,
         "border": true,
         "shadow": true,
+        "borderWidth": true,
         "borderRadius": true,
         "color": {
             "background": true,
@@ -78,10 +79,16 @@
         },
         "spacing": {
             "margin": true,
-            "padding": true,
-            "blockGap": true
+            "padding": true
         },
-        "align": true,
+        "align": [
+            "left",
+            "center",
+            "right",
+            "wide",
+            "full"
+        ],
+        "alignText": true,
         "anchor": true
     },
     "editorScript": "file:../../../build/Blocks/LocationCard/index.js",

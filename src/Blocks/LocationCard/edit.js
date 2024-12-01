@@ -411,53 +411,25 @@ export default function Edit({ attributes, setAttributes, isSelected, clientId, 
         setIsSearching(false);
     }, [setAttributes, generateAddressAbbreviation]);
 
-    const BLOCKS_TEMPLATE = [
-        ['core/group', {
-            className: 'wp-block-onepd-mapbox-location-card__body'
-        }, [
-            ['core/heading', {
-                level: 2,
-                className: 'wp-block-onepd-mapbox-location-card__title',
-                placeholder: __('Location Title', 'onepd-mapbox')
-            }],
-            ['core/paragraph', {
-                className: 'wp-block-onepd-mapbox-location-card__description',
-                placeholder: __('Location Description', 'onepd-mapbox')
-            }],
-            ['core/paragraph', {
-                className: 'wp-block-onepd-mapbox-location-card__address',
-                content: addressAbbreviation
-            }],
-            ['core/button', {
-                className: 'wp-block-onepd-mapbox-location-card__directions',
-                text: __('Get Directions', 'onepd-mapbox'),
-                url: `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`,
-                target: '_blank',
-                rel: 'noopener noreferrer'
-            }]
-        ]]
-    ];
+    const blockProps = useBlockProps({
+        className: 'wp-block-onepd-mapbox-location-card',
+    });
 
     const innerBlocksProps = useInnerBlocksProps(
         { className: 'wp-block-onepd-mapbox-location-card__content' },
         {
-            template: BLOCKS_TEMPLATE,
-            templateLock: false,
-            renderAppender: false
+            allowedBlocks: ['core/paragraph', 'core/heading', 'core/list', 'core/button'],
+            template: [
+                ['core/heading', { level: 3, placeholder: 'Location Title' }],
+                ['core/paragraph', { placeholder: 'Add location details' }]
+            ]
         }
     );
 
     const [searchQuery, setSearchQuery] = useState('');
 
     return (
-        <div {...useBlockProps({
-            className: 'wp-block-onepd-mapbox-location-card',
-            'data-latitude': Number(latitude),
-            'data-longitude': Number(longitude),
-            'data-address': address,
-            'data-map-style': mapStyle,
-            'data-zoom-level': Number(zoomLevel)
-        })}>
+        <div {...blockProps}>
             <InspectorControls>
                 <PanelBody 
                     title={__('Map Style', 'onepd-mapbox')}
@@ -623,9 +595,10 @@ export default function Edit({ attributes, setAttributes, isSelected, clientId, 
 
             {address && (
                 <>
-                    <div
-                        ref={mapContainerRef}
-                        className="wp-block-onepd-mapbox-location-card__map"
+                    <div 
+                        ref={mapContainerRef} 
+                        className="wp-block-onepd-mapbox-location-card__map" 
+                        style={{ minHeight: '300px' }}
                     />
                     <div {...innerBlocksProps} />
                 </>

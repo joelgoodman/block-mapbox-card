@@ -5,18 +5,17 @@
     border: var(--wp--style--border-width, 1px) solid var(--wp--preset--color--gray-200, #e5e7eb);
     padding: 0;
     margin: 0;
-    gap: var(--wp--style--block-gap, 16px);
     display: flex;
 
     &__inner {
         display: flex;
-        gap: inherit;
         width: 100%;
     }
 
     &__map {
+        border-top-left-radius: inherit;
+        border-bottom-left-radius: inherit;
         position: relative;
-        border-radius: inherit;
         overflow: hidden;
         background-color: var(--wp--preset--color--gray-100, #f5f5f5);
 
@@ -29,20 +28,21 @@
         }
     }
     &__content {
-        flex: 1 auto
+        flex: 1 auto;
+        display: flex;
+        align-items: center;
     }
     &__body {
         display: flex;
         flex-direction: column;
         gap: inherit;
-        padding: var(--wp--style--block-spacing, 16px);
     }
 
     // Block Styles
     &.is-style-row {
         flex-direction: row;
-        gap: inherit;
         justify-content: flex-start;
+        align-items: center;
 
         .wp-block-onepd-mapbox-location-card__map {
             flex: 0 0 40%;
@@ -58,7 +58,6 @@
 
     &.is-style-stacked {
         flex-direction: column;
-        gap: inherit;
 
         .wp-block-onepd-mapbox-location-card__map {
             width: 100%;
@@ -155,32 +154,11 @@
     margin-top: 0;
 }
 
-.wp-block-onepd-mapbox-location-card__address {
-    margin-bottom: 0.5rem;
-}
-
-.wp-block-onepd-mapbox-location-card__directions {
-    margin-top: 1rem;
-
-    .wp-block-buttons {
-        margin-bottom: 0;
-    }
-
-    .wp-block-button {
-        margin-bottom: 0;
-    }
-}
-
 .wp-block-onepd-location-card {
 
     .components-placeholder {
         min-height: 200px;
         padding: 24px;
-
-        &__fieldset {
-            max-width: 400px;
-            width: 100%;
-        }
 
         .components-search-control {
             width: 100%;
