@@ -181,9 +181,9 @@ class Block {
 		// Generate Schema.org JSON-LD for Location
 		$schema_location = array(
 			'@context' => 'https://schema.org',
-			'@type'    => 'Place',
+			'@type'    => ! empty( $attributes['schemaType'] ) ? esc_attr( $attributes['schemaType'] ) : 'Place',
 			'@id'      => home_url() . '#' . $block_id, // Unique identifier
-			'name'     => $address,
+			'name'     => ! empty( $attributes['schemaName'] ) ? esc_html( $attributes['schemaName'] ) : $address,
 			'geo'      => array(
 				'@type'     => 'GeoCoordinates',
 				'latitude'  => $latitude,
@@ -195,6 +195,29 @@ class Block {
 			),
 		);
 
+		// Optional: Add description if provided
+		if ( ! empty( $attributes['schemaDescription'] ) ) {
+			$schema_location['description'] = esc_html( $attributes['schemaDescription'] );
+		}
+
+		// Optional: Add telephone if provided
+		if ( ! empty( $attributes['schemaTelephone'] ) ) {
+			$schema_location['telephone'] = esc_html( $attributes['schemaTelephone'] );
+		}
+
+		// Optional: Add website if provided
+		if ( ! empty( $attributes['schemaWebsite'] ) ) {
+			$schema_location['url'] = esc_url( $attributes['schemaWebsite'] );
+		}
+
+		// Optional: Add opening hours if provided
+		if ( ! empty( $attributes['schemaOpeningHours'] ) ) {
+			$schema_location['openingHoursSpecification'] = array(
+				'@type'    => 'OpeningHoursSpecification',
+				'dayOfWeek' => esc_html( $attributes['schemaOpeningHours'] )
+			);
+		}
+
 		// Allow filtering of the Schema data
 		$schema_location = apply_filters( 'onepd_mapbox_location_schema', $schema_location, $attributes );
 
@@ -205,70 +228,47 @@ class Block {
 	}
 
 	public function output_schema_scripts() {
-        if (empty(self::$location_schemas)) {
-            return;
-        }
+        // Debug: Print out the contents of location_schemas and block attributes
+        error_log('Location Schemas: ' . print_r(self::$location_schemas, true));
+        error_log('Block Attributes: ' . print_r($this->attributes ?? 'No attributes', true));
 
-        $schema_output = [];
-        foreach (self::$location_schemas as $block_id => $location) {
-            // Base Schema.org structure
-            $schema = [
-                '@context' => 'https://schema.org',
-                '@type' => $location['schemaType'] ?? 'Place',
-            ];
+        // Only output if schemas exist
+        if ( ! empty( self::$location_schemas ) ) {
+            ?>
+            <script type="application/ld+json">
+            <?php 
+            // Prepare the schemas with additional processing
+            $processed_schemas = [];
+            foreach (self::$location_schemas as $block_id => $location) {
+                // Ensure we have valid data
+                if (empty($location['name']) || empty($location['geo']['latitude']) || empty($location['geo']['longitude'])) {
+                    continue;
+                }
 
-            // Add name if provided
-            if (!empty($location['schemaName'])) {
-                $schema['name'] = esc_html($location['schemaName']);
+                // Start with the existing schema structure
+                $schema = $location;
+
+                // Check if a custom schemaName is set in the block attributes
+                $custom_schema_name = apply_filters('onepd_location_card_schema_name', null, $block_id);
+                
+                // If a custom name is provided, replace the existing name
+                if (!empty($custom_schema_name)) {
+                    $schema['name'] = esc_html($custom_schema_name);
+                }
+
+                // Allow further customization
+                $schema = apply_filters('onepd_location_card_schema', $schema, $location);
+
+                $processed_schemas[] = $schema;
             }
 
-            // Add description if provided
-            if (!empty($location['schemaDescription'])) {
-                $schema['description'] = esc_html($location['schemaDescription']);
+            // Output processed schemas if we have any
+            if (!empty($processed_schemas)) {
+                echo wp_json_encode($processed_schemas, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
             }
-
-            // Add address details
-            $schema['address'] = [
-                '@type' => 'PostalAddress',
-                'streetAddress' => esc_html($location['address'] ?? ''),
-            ];
-
-            // Add geo coordinates
-            $schema['geo'] = [
-                '@type' => 'GeoCoordinates',
-                'latitude' => floatval($location['latitude'] ?? 0),
-                'longitude' => floatval($location['longitude'] ?? 0),
-            ];
-
-            // Optional contact information
-            if (!empty($location['schemaTelephone'])) {
-                $schema['telephone'] = esc_html($location['schemaTelephone']);
-            }
-
-            if (!empty($location['schemaWebsite'])) {
-                $schema['url'] = esc_url($location['schemaWebsite']);
-            }
-
-            // Add opening hours if provided (for business types)
-            if (!empty($location['schemaOpeningHours'])) {
-                $schema['openingHoursSpecification'] = [
-                    '@type' => 'OpeningHoursSpecification',
-                    'dayOfWeek' => esc_html($location['schemaOpeningHours'])
-                ];
-            }
-
-            // Apply filter to allow further customization
-            $schema = apply_filters('onepd_location_card_schema', $schema, $location);
-
-            $schema_output[] = $schema;
-        }
-
-        if (!empty($schema_output)) {
-            wp_add_inline_script(
-                'onepd-mapbox-location-card-frontend',
-                'var onepdLocationSchemas = ' . wp_json_encode($schema_output) . ';',
-                'before'
-            );
+            ?>
+            </script>
+            <?php
         }
     }
 
