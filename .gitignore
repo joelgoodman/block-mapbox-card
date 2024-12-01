@@ -17,6 +17,7 @@ yarn-error.log*
 *.min.js
 *.min.css
 *.map
+*.zip
 
 # Composer
 /vendor/
