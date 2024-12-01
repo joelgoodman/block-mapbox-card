@@ -19,6 +19,14 @@ class Block {
 			'2.15.0'
 		);
 
+		wp_register_script(
+			'mapbox-gl',
+			'https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js',
+			array(),
+			'2.15.0',
+			true
+		);
+
 		wp_register_style(
 			'mapbox-gl-geocoder',
 			'https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css',
