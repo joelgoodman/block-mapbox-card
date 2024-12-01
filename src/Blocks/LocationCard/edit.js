@@ -3,6 +3,7 @@ import {
     useBlockProps,
     BlockControls,
     InspectorControls,
+    useInnerBlocksProps,
     InnerBlocks
 } from '@wordpress/block-editor';
 import {
@@ -22,6 +23,7 @@ import {
 import { useState, useCallback, useEffect, useRef } from '@wordpress/element';
 import { edit as editIcon, mapMarker as pinIcon, close as closeIcon } from '@wordpress/icons';
 import mapboxgl from 'mapbox-gl';
+import { select, dispatch } from '@wordpress/data';
 import './editor.scss';
 
 const MAP_STYLES = [
@@ -41,24 +43,17 @@ export default function Edit({ attributes, setAttributes, isSelected, clientId }
         longitude = 0,
         mapStyle = 'streets-v12',
         zoomLevel = 14,
-        orientation = 'horizontal',
-        layout = { type: 'flex', orientation: 'horizontal' },
         addressAbbreviation = ''
     } = attributes;
 
     // Prepare block props with data attributes
     const blockProps = useBlockProps({
-        className: [
-            'wp-block-onepd-mapbox-location-card',
-            layout?.type ? `is-layout-${layout.type}` : '',
-            layout?.orientation ? `is-${layout.orientation}` : ''
-        ].filter(Boolean).join(' '),
-        'data-latitude': latitude,
-        'data-longitude': longitude,
+        className: 'wp-block-onepd-mapbox-location-card',
+        'data-latitude': Number(latitude),
+        'data-longitude': Number(longitude),
         'data-address': address,
         'data-map-style': mapStyle,
-        'data-zoom-level': zoomLevel,
-        'data-orientation': orientation
+        'data-zoom-level': Number(zoomLevel)
     });
 
     const [isSearching, setIsSearching] = useState(false);
@@ -67,6 +62,7 @@ export default function Edit({ attributes, setAttributes, isSelected, clientId }
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
     const [map, setMap] = useState(null);
+    const [mapMarker, setMapMarker] = useState(null);
     const mapContainerRef = useRef(null);
 
     // Perform Mapbox search
@@ -252,72 +248,177 @@ export default function Edit({ attributes, setAttributes, isSelected, clientId }
         }
     }, [address, generateAddressAbbreviation, setAttributes]);
 
-    // Update map when style or zoom changes
+    // Update address block binding when address changes
     useEffect(() => {
-        if (!map) return;
+        if (!clientId) return;
 
-        map.setStyle(`mapbox://styles/mapbox/${mapStyle}`);
-        map.setZoom(zoomLevel);
-    }, [map, mapStyle, zoomLevel]);
+        const innerBlocks = select('core/block-editor').getBlocks(clientId);
+        const groupBlock = innerBlocks.find(block => block.name === 'core/group');
 
-    // Reinitialize map when orientation changes
-    useEffect(() => {
-        if (!map || !mapContainerRef.current) return;
+        if (groupBlock) {
+            // Update address text
+            const addressBlock = groupBlock.innerBlocks.find(block =>
+                block.attributes.className?.includes('wp-block-onepd-mapbox-location-card__address')
+            );
 
-        // Trigger a resize to ensure map fits new container
-        map.resize();
+            if (addressBlock) {
+                dispatch('core/block-editor').updateBlockAttributes(addressBlock.clientId, {
+                    content: addressAbbreviation
+                });
+            }
 
-        // Optionally, you can recenter the map
-        if (latitude && longitude) {
-            map.setCenter([longitude, latitude]);
+            // Update Get Directions button URL
+            const buttonBlock = groupBlock.innerBlocks.find(block =>
+                block.name === 'core/button'
+            );
+
+            if (buttonBlock) {
+                const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`;
+                dispatch('core/block-editor').updateBlockAttributes(buttonBlock.clientId, {
+                    url: directionsUrl
+                });
+            }
         }
-    }, [layout?.orientation, map, latitude, longitude]);
+    }, [address, addressAbbreviation, clientId]);
 
-    // Initialize or update map when coordinates change
+    // Handle address selection
+    const handleAddressSelect = useCallback((place) => {
+        if (!place?.center) return;
+        
+        setAttributes({
+            latitude: place.center[1],
+            longitude: place.center[0],
+            address: place.place_name,
+            addressAbbreviation: generateAddressAbbreviation(place.place_name)
+        });
+        setIsSearching(false);
+    }, [setAttributes, generateAddressAbbreviation]);
+
+    // Initialize map when component mounts or coordinates change
     useEffect(() => {
-        if (!latitude || !longitude || !mapContainerRef.current) return;
-
-        const apiKey = window.onePDMapbox?.apiKey;
-        if (!apiKey) {
-            console.error('Mapbox API key not found');
+        // Ensure container and API key exist
+        if (!mapContainerRef.current || !window.onePDMapbox?.apiKey) {
             return;
         }
 
-        // Initialize map if it doesn't exist
-        if (!map) {
-            mapboxgl.accessToken = apiKey;
-            const newMap = new mapboxgl.Map({
-                container: mapContainerRef.current,
-                style: `mapbox://styles/mapbox/${mapStyle}`,
-                center: [longitude, latitude],
-                zoom: zoomLevel,
-                trackUserLocation: false
-            });
-
-            // Add navigation controls
-            newMap.addControl(new mapboxgl.NavigationControl(), 'top-left');
-
-            // Add marker
-            new mapboxgl.Marker()
-                .setLngLat([longitude, latitude])
-                .addTo(newMap);
-
-            setMap(newMap);
-        } else {
-            // Update existing map
-            map.setCenter([longitude, latitude]);
-            map.getMarkers?.()?.[0]?.setLngLat([longitude, latitude]);
+        // Cleanup any existing map instance
+        if (map) {
+            if (mapMarker) {
+                mapMarker.remove();
+                setMapMarker(null);
+            }
+            map.remove();
+            setMap(null);
         }
-    }, [latitude, longitude, map, mapStyle, zoomLevel]);
 
-    // Cleanup map on unmount
-    useEffect(() => {
+        // Wait for container to be ready
+        setTimeout(() => {
+            if (!mapContainerRef.current) return;
+
+            mapboxgl.accessToken = window.onePDMapbox.apiKey;
+
+            // Use saved coordinates if they exist
+            const hasCoordinates = latitude && longitude;
+            const center = hasCoordinates ? [longitude, latitude] : [-122.4194, 37.7749];
+
+            try {
+                const newMap = new mapboxgl.Map({
+                    container: mapContainerRef.current,
+                    style: `mapbox://styles/mapbox/${mapStyle}`,
+                    center: center,
+                    zoom: Number(zoomLevel) || 12,
+                    interactive: true
+                });
+
+                // Wait for map to load before adding controls and marker
+                newMap.on('load', () => {
+                    // Add navigation control
+                    newMap.addControl(new mapboxgl.NavigationControl());
+
+                    // Add marker only if we have saved coordinates
+                    if (hasCoordinates) {
+                        const marker = new mapboxgl.Marker()
+                            .setLngLat([longitude, latitude])
+                            .addTo(newMap);
+                        setMapMarker(marker);
+                    }
+                });
+
+                setMap(newMap);
+            } catch (error) {
+                console.error('Error initializing map:', error);
+            }
+        }, 0);
+
+        // Cleanup function
         return () => {
+            if (mapMarker) {
+                mapMarker.remove();
+                setMapMarker(null);
+            }
             if (map) {
                 map.remove();
+                setMap(null);
             }
         };
-    }, [map]);
+    }, [mapContainerRef, mapStyle, latitude, longitude, zoomLevel]);
+
+    // Update map when coordinates change
+    useEffect(() => {
+        if (!map || !latitude || !longitude) return;
+
+        try {
+            const coords = [longitude, latitude];
+            map.setCenter(coords);
+
+            if (mapMarker) {
+                mapMarker.setLngLat(coords);
+            } else {
+                const marker = new mapboxgl.Marker()
+                    .setLngLat(coords)
+                    .addTo(map);
+                setMapMarker(marker);
+            }
+        } catch (error) {
+            console.error('Error updating map:', error);
+        }
+    }, [map, latitude, longitude]);
+
+    const BLOCKS_TEMPLATE = [
+        ['core/group', {
+            className: 'wp-block-onepd-mapbox-location-card__body'
+        }, [
+            ['core/heading', {
+                level: 2,
+                className: 'wp-block-onepd-mapbox-location-card__title',
+                placeholder: __('Location Title', 'onepd-mapbox')
+            }],
+            ['core/paragraph', {
+                className: 'wp-block-onepd-mapbox-location-card__description',
+                placeholder: __('Location Description', 'onepd-mapbox')
+            }],
+            ['core/paragraph', {
+                className: 'wp-block-onepd-mapbox-location-card__address',
+                content: addressAbbreviation
+            }],
+            ['core/button', {
+                className: 'wp-block-onepd-mapbox-location-card__directions',
+                text: __('Get Directions', 'onepd-mapbox'),
+                url: `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`,
+                target: '_blank',
+                rel: 'noopener noreferrer'
+            }]
+        ]]
+    ];
+
+    const innerBlocksProps = useInnerBlocksProps(
+        { className: 'wp-block-onepd-mapbox-location-card__content' },
+        {
+            template: BLOCKS_TEMPLATE,
+            templateLock: false,
+            renderAppender: false
+        }
+    );
 
     return (
         <div {...blockProps}>
@@ -402,7 +503,7 @@ export default function Edit({ attributes, setAttributes, isSelected, clientId }
                                     suggestions.map((suggestion, index) => (
                                         <Button
                                             key={suggestion.id}
-                                            onClick={() => handleSelectLocation(suggestion)}
+                                            onClick={() => handleAddressSelect(suggestion)}
                                             className="wp-block-onepd-mapbox-location-card__suggestion-item"
                                         >
                                             {suggestion.place_name}
@@ -442,75 +543,7 @@ export default function Edit({ attributes, setAttributes, isSelected, clientId }
                         ref={mapContainerRef}
                         className="wp-block-onepd-mapbox-location-card__map"
                     />
-                    <InnerBlocks
-                        template={[
-                            [
-                                "core/group",
-                                {
-                                    className:
-                                        "wp-block-onepd-mapbox-location-card__body",
-                                    layout: {
-                                        type: "constrained",
-                                        justifyContent: "center",
-                                        type: "default",
-                                        spacing: {
-                                            blockGap: "16px",
-                                            margin: {
-                                                top: "0",
-                                                bottom: "0",
-                                            },
-                                            padding: {
-                                                top: "0",
-                                                right: "var|preset|spacing|20",
-                                                bottom: "var|preset|spacing|20",
-                                                left: "var|preset|spacing|20",
-                                            },
-                                        },
-                                    },
-                                },
-                                [
-                                    [
-                                        "core/heading",
-                                        {
-                                            level: 2,
-                                            className:
-                                                "wp-block-onepd-mapbox-location-card__title",
-                                            placeholder: __(
-                                                "Location Title",
-                                                "onepd-mapbox"
-                                            ),
-                                        },
-                                    ],
-                                    [
-                                        "core/paragraph",
-                                        {
-                                            className:
-                                                "wp-block-onepd-mapbox-location-card__description",
-                                            placeholder: __(
-                                                "Location Description",
-                                                "onepd-mapbox"
-                                            ),
-                                        },
-                                    ],
-                                    [
-                                        "core/paragraph",
-                                        {
-                                            content: `${addressAbbreviation} <a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}" target="_blank" rel="noopener noreferrer" class="wp-block-onepd-mapbox-location-card__directions-link">${__('Get Directions', 'onepd-mapbox')}</a>`,
-                                            className:
-                                                "wp-block-onepd-mapbox-location-card__address",
-                                            __experimentalBlockBindings: {
-                                                paragraph: {
-                                                    source: "core/paragraph",
-                                                    path: "content",
-                                                },
-                                            },
-                                        },
-                                    ],
-                                ],
-                            ],
-                        ]}
-                        templateLock="all"
-                    />
+                    <div {...innerBlocksProps} />
                 </>
             )}
         </div>

@@ -2,22 +2,14 @@
     "$schema": "https://schemas.wp.org/trunk/block.json",
     "apiVersion": 2,
     "name": "onepd-mapbox/location-card",
-    "version": "1.0.0",
+    "version": "0.1.0",
     "title": "Location Card",
     "category": "widgets",
     "icon": "location",
-    "description": "Display a location with a map and details",
+    "description": "Display a location card with an embedded map.",
     "keywords": ["location", "map", "address"],
     "textdomain": "onepd-mapbox",
     "attributes": {
-        "address": {
-            "type": "string",
-            "default": ""
-        },
-        "addressAbbreviation": {
-            "type": "string",
-            "default": ""
-        },
         "latitude": {
             "type": "number",
             "default": 0
@@ -26,17 +18,25 @@
             "type": "number",
             "default": 0
         },
+        "address": {
+            "type": "string",
+            "default": ""
+        },
+        "addressAbbreviation": {
+            "type": "string",
+            "default": ""
+        },
         "mapStyle": {
             "type": "string",
             "default": "streets-v12"
         },
         "zoomLevel": {
             "type": "number",
-            "default": 14
+            "default": 15
         },
         "orientation": {
             "type": "string",
-            "default": "horizontal"
+            "default": "vertical"
         }
     },
     "supports": {
@@ -45,7 +45,8 @@
         "shadow": true,
         "borderRadius": true,
         "color": {
-            "background": true
+            "background": true,
+            "text": true
         },
         "spacing": {
             "margin": true,
@@ -53,7 +54,7 @@
             "blockGap": true
         },
         "align": true,
-        "layout": true
+        "anchor": true
     },
     "editorScript": "file:../../../build/Blocks/LocationCard/index.js",
     "editorStyle": ["file:../../../build/Blocks/LocationCard/index.css", "mapbox-gl", "mapbox-gl-geocoder"],

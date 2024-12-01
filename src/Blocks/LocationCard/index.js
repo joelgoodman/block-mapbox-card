@@ -1,4 +1,13 @@
+/**
+ * WordPress dependencies
+ */
 import { registerBlockType } from '@wordpress/blocks';
+import { useBlockProps, useInnerBlocksProps, InnerBlocks } from '@wordpress/block-editor';
+import { __ } from '@wordpress/i18n';
+
+/**
+ * Internal dependencies
+ */
 import Edit from './edit';
 import './editor.scss';
 import metadata from './block.json';
@@ -75,11 +84,48 @@ if (!apiKey) {
     console.warn('No Mapbox API Key could be retrieved. Location search will not work.');
 }
 
-// Localize the API key to make it available in the frontend
-wp.blocks.registerBlockType(metadata.name, {
-    ...metadata,
+// Register block
+const { name } = metadata;
+
+// Register block styles
+if (wp.blocks) {
+    wp.blocks.unregisterBlockStyle(name, 'default');
+    wp.blocks.registerBlockStyle(name, {
+        name: 'stacked',
+        label: __('Stacked', 'onepd-mapbox'),
+        isDefault: true
+    });
+    wp.blocks.registerBlockStyle(name, {
+        name: 'row',
+        label: __('Row', 'onepd-mapbox')
+    });
+}
+
+registerBlockType(name, {
     edit: Edit,
-    save: () => null, // Dynamic block, rendered by PHP
+    save: ({ attributes }) => {
+        const { address, latitude, longitude, mapStyle, zoomLevel } = attributes;
+
+        const blockProps = useBlockProps.save({
+            className: 'wp-block-onepd-mapbox-location-card',
+            'data-latitude': latitude,
+            'data-longitude': longitude,
+            'data-address': address,
+            'data-map-style': mapStyle,
+            'data-zoom-level': zoomLevel
+        });
+
+        const innerBlocksProps = useInnerBlocksProps.save({
+            className: 'wp-block-onepd-mapbox-location-card__content'
+        });
+
+        return (
+            <div {...blockProps}>
+                <div className="wp-block-onepd-mapbox-location-card__map" />
+                <div {...innerBlocksProps} />
+            </div>
+        );
+    },
     attributes: {
         ...metadata.attributes,
         mapboxApiKey: {

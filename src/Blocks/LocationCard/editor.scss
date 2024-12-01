@@ -211,6 +211,56 @@
             padding: 8px;
         }
     }
+
+    &.is-style-stacked {
+        .wp-block-onepd-mapbox-location-card__map {
+            margin-bottom: 1rem;
+        }
+    }
+
+    &.is-style-row {
+        display: flex;
+        gap: 2rem;
+        align-items: flex-start;
+
+        .wp-block-onepd-mapbox-location-card__map {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .wp-block-onepd-mapbox-location-card__content {
+            flex: 1;
+        }
+    }
+}
+
+.wp-block-onepd-mapbox-location-card__map {
+    aspect-ratio: 16/9;
+    background: #eee;
+}
+
+.wp-block-onepd-mapbox-location-card__body {
+    margin: 0;
+}
+
+.wp-block-onepd-mapbox-location-card__title {
+    margin-top: 0;
+}
+
+.wp-block-onepd-mapbox-location-card__address {
+    margin-bottom: 0.5rem;
+}
+
+.wp-block-onepd-mapbox-location-card__directions {
+    margin-top: 1rem;
+    
+    .wp-block-buttons {
+        margin-bottom: 0;
+    }
+    
+    .wp-block-button {
+        margin-bottom: 0;
+    }
 }
 
 .wp-block-onepd-location-card {
