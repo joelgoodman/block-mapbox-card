@@ -6,6 +6,9 @@ class Block {
 	private $script_handle = 'onepd-mapbox-location-card';
 	private $style_handle  = 'onepd-mapbox-location-card-style';
 
+	// Static property to store schemas
+	private static $location_schemas = [];
+
 	public function register(): void {
 		if ( ! function_exists( 'register_block_type' ) ) {
 			return;
@@ -35,6 +38,9 @@ class Block {
 		);
 
 		$this->register_block_type();
+
+		// Add hook to output Schema scripts in footer
+		add_action( 'wp_footer', array( $this, 'output_schema_scripts' ) );
 	}
 
 	public function register_block_type(): void {
@@ -109,9 +115,11 @@ class Block {
 	}
 
 	public function render_callback( $attributes, $content ): string {
+		// Conditionally enqueue Mapbox GL JS only when the block is rendered
 		wp_enqueue_style( 'mapbox-gl' );
 		wp_enqueue_script( 'mapbox-gl' );
 
+		// Enqueue frontend script for map initialization
 		wp_enqueue_script(
 			'onepd-mapbox-location-card-frontend',
 			plugins_url( 'build/Blocks/LocationCard/frontend.js', dirname( dirname( __DIR__ ) ) ),
@@ -120,47 +128,93 @@ class Block {
 			true
 		);
 
-		$latitude = !empty( $attributes['latitude'] ) ? floatval( $attributes['latitude'] ) : 0;
-		$longitude = !empty( $attributes['longitude'] ) ? floatval( $attributes['longitude'] ) : 0;
-		$address = !empty( $attributes['address'] ) ? esc_attr( $attributes['address'] ) : '';
-		$map_style = !empty( $attributes['mapStyle'] ) ? esc_attr( $attributes['mapStyle'] ) : 'streets-v11';
-		$zoom_level = !empty( $attributes['zoomLevel'] ) ? intval( $attributes['zoomLevel'] ) : 14;
+		// Get values with defaults
+		$latitude   = ! empty( $attributes['latitude'] ) ? floatval( $attributes['latitude'] ) : 0;
+		$longitude  = ! empty( $attributes['longitude'] ) ? floatval( $attributes['longitude'] ) : 0;
+		$address    = ! empty( $attributes['address'] ) ? esc_attr( $attributes['address'] ) : '';
+		$map_style  = ! empty( $attributes['mapStyle'] ) ? esc_attr( $attributes['mapStyle'] ) : 'streets-v12';
+		$zoom_level = ! empty( $attributes['zoomLevel'] ) ? intval( $attributes['zoomLevel'] ) : 14;
 
+		// Generate a unique ID for this block instance
+		$block_id = 'location-' . wp_unique_id( 'onepd-mapbox-' );
+
+		// Pass location data to frontend script (maintaining existing API key handling)
 		wp_localize_script(
 			'onepd-mapbox-location-card-frontend',
 			'onePDMapboxLocationData',
 			array(
-				'latitude' => $latitude,
+				'apiKey'    => $this->get_mapbox_api_key(),
+				'latitude'  => $latitude,
 				'longitude' => $longitude,
-				'address' => $address,
-				'apiKey' => $this->get_mapbox_api_key()
+				'address'   => $address,
 			)
 		);
 
-		$wrapper_attributes = get_block_wrapper_attributes( array(
-			'data-latitude' => $latitude,
-			'data-longitude' => $longitude,
-			'data-address' => $address,
-			'data-map-style' => $map_style,
-			'data-zoom-level' => $zoom_level,
-			'aria-label' => __('Location Map and Details', 'onepd-mapbox'),
-			'role' => 'region'
-		) );
+		// Build the block's HTML with data attributes and accessibility enhancements
+		$wrapper_attributes = get_block_wrapper_attributes(
+			array(
+				'id'              => $block_id,
+				'data-latitude'   => $latitude,
+				'data-longitude'  => $longitude,
+				'data-address'    => $address,
+				'data-map-style'  => $map_style,
+				'data-zoom-level' => $zoom_level,
+				'role'            => 'region',
+			)
+		);
 
-		$map_div_attributes = ' aria-label="' . esc_attr__('Interactive map showing location', 'onepd-mapbox') . '" role="img" aria-describedby="location-description"';
-		$content = str_replace(
+		// Modify the map div to add a11y attributes
+		$map_div_attributes = ' aria-label="' . esc_attr__( 'Interactive map showing location', 'onepd-mapbox' ) . '" role="img" aria-describedby="location-' . esc_attr( $block_id ) . '"';
+		$content            = str_replace(
 			'<div class="wp-block-onepd-mapbox-location-card__map">',
 			'<div class="wp-block-onepd-mapbox-location-card__map"' . $map_div_attributes . '>',
 			$content
 		);
 
+		// Modify the address paragraph to add a11y attributes
 		$content = str_replace(
 			'<p class="wp-block-onepd-location-card__address">',
-			'<p class="wp-block-onepd-location-card__address" id="location-description" aria-live="polite">',
+			'<p class="wp-block-onepd-location-card__address" id="location-' . esc_attr( $block_id ) . '" aria-live="polite">',
 			$content
 		);
 
+		// Generate Schema.org JSON-LD for Location
+		$schema_location = array(
+			'@context' => 'https://schema.org',
+			'@type'    => 'Place',
+			'@id'      => home_url() . '#' . $block_id, // Unique identifier
+			'name'     => $address,
+			'geo'      => array(
+				'@type'     => 'GeoCoordinates',
+				'latitude'  => $latitude,
+				'longitude' => $longitude,
+			),
+			'address'  => array(
+				'@type'         => 'PostalAddress',
+				'streetAddress' => $address,
+			),
+		);
+
+		// Allow filtering of the Schema data
+		$schema_location = apply_filters( 'onepd_mapbox_location_schema', $schema_location, $attributes );
+
+		// Store Schema in a static property instead of global
+		self::$location_schemas[] = $schema_location;
+
 		return $content;
+	}
+
+	public function output_schema_scripts() {
+		// Only output if schemas exist
+		if ( ! empty( self::$location_schemas ) ) {
+			?>
+			<script type="application/ld+json">
+			<?php 
+			echo wp_json_encode( self::$location_schemas, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES );
+			?>
+			</script>
+			<?php
+		}
 	}
 
 	private function get_mapbox_api_key(): string {
