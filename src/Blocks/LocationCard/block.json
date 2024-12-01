@@ -32,7 +32,39 @@
         },
         "zoomLevel": {
             "type": "number",
-            "default": 12
+            "default": 14
+        },
+        "schemaType": {
+            "type": "string",
+            "default": "Place",
+            "enum": [
+                "Place",
+                "LocalBusiness",
+                "Restaurant",
+                "Hotel",
+                "TouristAttraction",
+                "Organization"
+            ]
+        },
+        "schemaName": {
+            "type": "string",
+            "default": ""
+        },
+        "schemaDescription": {
+            "type": "string",
+            "default": ""
+        },
+        "schemaOpeningHours": {
+            "type": "string",
+            "default": ""
+        },
+        "schemaTelephone": {
+            "type": "string",
+            "default": ""
+        },
+        "schemaWebsite": {
+            "type": "string",
+            "default": ""
         }
     },
     "supports": {

@@ -205,17 +205,72 @@ class Block {
 	}
 
 	public function output_schema_scripts() {
-		// Only output if schemas exist
-		if ( ! empty( self::$location_schemas ) ) {
-			?>
-			<script type="application/ld+json">
-			<?php 
-			echo wp_json_encode( self::$location_schemas, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES );
-			?>
-			</script>
-			<?php
-		}
-	}
+        if (empty(self::$location_schemas)) {
+            return;
+        }
+
+        $schema_output = [];
+        foreach (self::$location_schemas as $block_id => $location) {
+            // Base Schema.org structure
+            $schema = [
+                '@context' => 'https://schema.org',
+                '@type' => $location['schemaType'] ?? 'Place',
+            ];
+
+            // Add name if provided
+            if (!empty($location['schemaName'])) {
+                $schema['name'] = esc_html($location['schemaName']);
+            }
+
+            // Add description if provided
+            if (!empty($location['schemaDescription'])) {
+                $schema['description'] = esc_html($location['schemaDescription']);
+            }
+
+            // Add address details
+            $schema['address'] = [
+                '@type' => 'PostalAddress',
+                'streetAddress' => esc_html($location['address'] ?? ''),
+            ];
+
+            // Add geo coordinates
+            $schema['geo'] = [
+                '@type' => 'GeoCoordinates',
+                'latitude' => floatval($location['latitude'] ?? 0),
+                'longitude' => floatval($location['longitude'] ?? 0),
+            ];
+
+            // Optional contact information
+            if (!empty($location['schemaTelephone'])) {
+                $schema['telephone'] = esc_html($location['schemaTelephone']);
+            }
+
+            if (!empty($location['schemaWebsite'])) {
+                $schema['url'] = esc_url($location['schemaWebsite']);
+            }
+
+            // Add opening hours if provided (for business types)
+            if (!empty($location['schemaOpeningHours'])) {
+                $schema['openingHoursSpecification'] = [
+                    '@type' => 'OpeningHoursSpecification',
+                    'dayOfWeek' => esc_html($location['schemaOpeningHours'])
+                ];
+            }
+
+            // Apply filter to allow further customization
+            $schema = apply_filters('onepd_location_card_schema', $schema, $location);
+
+            $schema_output[] = $schema;
+        }
+
+        if (!empty($schema_output)) {
+            wp_add_inline_script(
+                'onepd-mapbox-location-card-frontend',
+                'var onepdLocationSchemas = ' . wp_json_encode($schema_output) . ';',
+                'before'
+            );
+        }
+    }
 
 	private function get_mapbox_api_key(): string {
 		$api_key = '';

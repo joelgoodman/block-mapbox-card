@@ -42,7 +42,13 @@ export default function Edit({ attributes, setAttributes, isSelected, clientId, 
         latitude,
         longitude,
         mapStyle = 'streets-v12',
-        zoomLevel = 12
+        zoomLevel = 12,
+        schemaType = 'Place',
+        schemaName = '',
+        schemaDescription = '',
+        schemaOpeningHours = '',
+        schemaTelephone = '',
+        schemaWebsite = ''
     } = attributes;
 
     const [map, setMap] = useState(null);
@@ -453,24 +459,71 @@ export default function Edit({ attributes, setAttributes, isSelected, clientId, 
             'data-zoom-level': Number(zoomLevel)
         })}>
             <InspectorControls>
-                <PanelBody
-                    title={__("Map Settings", "onepd-mapbox")}
+                <PanelBody 
+                    title={__('Map Style', 'onepd-mapbox')}
                     initialOpen={true}
                 >
+                    <SelectControl
+                        label={__('Map Style', 'onepd-mapbox')}
+                        value={mapStyle}
+                        options={MAP_STYLES}
+                        onChange={(newMapStyle) => setAttributes({ mapStyle: newMapStyle })}
+                    />
                     <RangeControl
-                        label={__("Zoom Level", "onepd-mapbox")}
+                        label={__('Zoom Level', 'onepd-mapbox')}
                         value={zoomLevel}
-                        onChange={(value) =>
-                            setAttributes({ zoomLevel: value })
-                        }
+                        onChange={(newZoomLevel) => setAttributes({ zoomLevel: newZoomLevel })}
                         min={1}
                         max={20}
                     />
+                </PanelBody>
+
+                <PanelBody 
+                    title={__('Schema.org Settings', 'onepd-mapbox')}
+                    initialOpen={false}
+                >
                     <SelectControl
-                        label={__("Map Style", "onepd-mapbox")}
-                        value={mapStyle}
-                        options={MAP_STYLES}
-                        onChange={(value) => setAttributes({ mapStyle: value })}
+                        label={__('Schema Type', 'onepd-mapbox')}
+                        value={schemaType}
+                        options={[
+                            { label: 'Place', value: 'Place' },
+                            { label: 'Local Business', value: 'LocalBusiness' },
+                            { label: 'Restaurant', value: 'Restaurant' },
+                            { label: 'Hotel', value: 'Hotel' },
+                            { label: 'Tourist Attraction', value: 'TouristAttraction' },
+                            { label: 'Organization', value: 'Organization' }
+                        ]}
+                        onChange={(newSchemaType) => setAttributes({ schemaType: newSchemaType })}
+                    />
+                    <TextControl
+                        label={__('Name', 'onepd-mapbox')}
+                        value={schemaName}
+                        onChange={(newSchemaName) => setAttributes({ schemaName: newSchemaName })}
+                        help={__('Optional name for the location in Schema.org markup', 'onepd-mapbox')}
+                    />
+                    <TextControl
+                        label={__('Description', 'onepd-mapbox')}
+                        value={schemaDescription}
+                        onChange={(newSchemaDescription) => setAttributes({ schemaDescription: newSchemaDescription })}
+                        help={__('Optional description for the location', 'onepd-mapbox')}
+                    />
+                    <TextControl
+                        label={__('Telephone', 'onepd-mapbox')}
+                        value={schemaTelephone}
+                        onChange={(newSchemaTelephone) => setAttributes({ schemaTelephone: newSchemaTelephone })}
+                        help={__('Contact telephone number', 'onepd-mapbox')}
+                    />
+                    <TextControl
+                        label={__('Website', 'onepd-mapbox')}
+                        value={schemaWebsite}
+                        onChange={(newSchemaWebsite) => setAttributes({ schemaWebsite: newSchemaWebsite })}
+                        help={__('Official website URL', 'onepd-mapbox')}
+                    />
+                    <TextControl
+                        label={__('Opening Hours', 'onepd-mapbox')}
+                        value={schemaOpeningHours}
+                        onChange={(newSchemaOpeningHours) => setAttributes({ schemaOpeningHours: newSchemaOpeningHours })}
+                        help={__('Specify opening hours (e.g., Monday-Friday)', 'onepd-mapbox')}
                     />
                 </PanelBody>
             </InspectorControls>
