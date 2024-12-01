@@ -1,11 +1,11 @@
 <?php
 /**
- * Plugin Name: One Perfect Dish - Mapbox Integration
- * Plugin URI: https://github.com/1perfectdish/1pd-mapbox
- * Description: Mapbox integration for One Perfect Dish
+ * Plugin Name: OnePD Mapbox
+ * Plugin URI: https://onepd.com
+ * Description: Mapbox integration for OnePD
  * Version: 1.0.1
- * Author: One Perfect Dish
- * Author URI: https://oneperfectdish.com
+ * Author: OnePD
+ * Author URI: https://onepd.com
  * License: GPL2
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: onepd-mapbox
