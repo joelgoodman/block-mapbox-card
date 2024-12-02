@@ -1,7 +1,7 @@
 {
     "name": "onepd/mapbox",
     "description": "Mapbox integration for One Perfect Dish",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "type": "wordpress-plugin",
     "license": "GPL-2.0-or-later",
     "autoload": {

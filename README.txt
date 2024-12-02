@@ -3,7 +3,7 @@ Contributors: asilentthing
 Tags: maps, mapbox, locations, blocks, geocoding
 Requires at least: 5.8
 Tested up to: 6.7
-Stable tag: 1.0.1
+Stable tag: 1.0.2
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -86,7 +86,7 @@ Yes, you can customize various aspects of the map through the block settings in 
 
 == Changelog ==
 
-= 1.0.1 =
+= 1.0.2 =
 * Fixed block template locking to allow editing of inner blocks while maintaining group structure
 * Restored block bindings for dynamic address and directions updates
 
@@ -99,7 +99,7 @@ Yes, you can customize various aspects of the map through the block settings in 
 
 == Upgrade Notice ==
 
-= 1.0.1 =
+= 1.0.2 =
 Fixed block template locking and restored block bindings.
 
 = 1.0.0 =
