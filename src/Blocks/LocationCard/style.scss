@@ -54,4 +54,12 @@
             flex: 1 auto;
         }
     }
+    @media ( width < 600px ) {
+        // Stack on mobile
+        flex-direction: column !important;
+        .wp-block-onepd-mapbox-location-card__map,
+        .wp-block-onepd-mapbox-location-card__content {
+            width: 100% !important;
+        }
+    }
 }
